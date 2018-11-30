@@ -1,0 +1,27 @@
+{
+  "name": "instagram-downloader",
+  "version": "1.0.0",
+  "description": "download images from instagram using node.js with phantomjs",
+  "main": "index.js",
+  "dependencies": {
+    "fs-extra": "^7.0.1",
+    "image-downloader": "^3.4.1",
+    "phantom": "^6.0.3",
+    "prompts": "^1.2.1",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avivharuzi/instagram-downloader.git"
+  },
+  "author": "Aviv Haruzi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/avivharuzi/instagram-downloader/issues"
+  },
+  "homepage": "https://github.com/avivharuzi/instagram-downloader#readme"
+}
