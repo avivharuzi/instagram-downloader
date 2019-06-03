@@ -1,2 +1,3 @@
-# instagram-downloader
-download images from instagram using node.js with phantomjs
+# Instagram Downloader
+
+Download images from Instagram using Node.js with Phantomjs.
