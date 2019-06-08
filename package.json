@@ -6,8 +6,8 @@
   "dependencies": {
     "fs-extra": "^7.0.1",
     "image-downloader": "^3.4.1",
-    "phantom": "^6.0.3",
     "prompts": "^1.2.1",
+    "puppeteer": "^1.17.0",
     "request": "^2.88.0"
   },
   "devDependencies": {},
