@@ -3,18 +3,19 @@ function getEdgesFromGraphql(graphql) {
 }
 
 function getImagesFromEdges(edges) {
-	var images = [];
-	
-	for (var i = 0; i < edges.length; i++) {
+	let images = [];
+
+	for (let i = 0; i < edges.length; i++) {
 		images.push(edges[i].node.display_url);
 	}
-	
+
 	return images;
 }
 
 function getFirstImages() {
-	var graphql = _sharedData.entry_data.ProfilePage[0].graphql;
-	var edges = getEdgesFromGraphql(graphql);
+	const graphql = _sharedData.entry_data.ProfilePage[0].graphql;
+  const edges = getEdgesFromGraphql(graphql);
+
 	return getImagesFromEdges(edges);
 }
 
