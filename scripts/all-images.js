@@ -1,144 +1,139 @@
-let allImages = [];
-const count = getCount();
-let counter = 0;
-const firstImageElements = document.querySelectorAll('img[decoding=\'auto\']');
-let scrollingInterval;
+function allImages() {
+  return new Promise(async (resolve) => {
+    const firstImageElements = document.querySelectorAll('img[decoding=\'auto\']');
 
-(function () {
-	const origOpen = XMLHttpRequest.prototype.open;
-	
-	XMLHttpRequest.prototype.open = function () {
-		this.addEventListener('load', function () {
-			if (this.readyState === 4) {
-				let response = this.responseText;
-				
-				if (response) {
-					response = JSON.parse(response);
-					
-					console.log(response);
-					
-					if (response.data) {
-						let images = [];
-						
-						if (response.data.shortcode_media) {
-							images = getImagesFromShortCodeMedia(response.data.shortcode_media);
-						} else {
-							const edges = getEdgesFromGraphql(response.data);
-							counter += edges.length;
-							images = getImagesFromEdges(edges);
-						}
-						allImages.push(...images);
-					}
-				}
-			}
-		});
-		
-		origOpen.apply(this, arguments);
-	};
-})();
+    let allImages = [];
+    let counter = 0;
+    let scrollingInterval = null;
 
-(async function () {
-	await getAllFirstImages();
-	
-	scrollingInterval = setInterval(function () {
-		if (counter === count) {
-			clearInterval(scrollingInterval);
-			downloadAllImages();
-		} else {
-			goToBottom();
-		}
-	}, 1000);
-}());
+    const userPostsCount = getUserPostsCount();
 
-async function getAllFirstImages() {
-	counter += firstImageElements.length;
-	
-	for (const firstImagesElement of firstImageElements) {
-		await openImageAndClose(firstImagesElement);
-	}
-}
+    (() => {
+      const origOpen = XMLHttpRequest.prototype.open;
 
-async function openImageAndClose(element) {
-	return new Promise(resolve => {
-		setTimeout(() => {
-			element.click();
-			document.querySelector('div[role=\'dialog\']').click();
-			resolve();
-		}, 3000);
-	});
-}
+      XMLHttpRequest.prototype.open = function () {
+        this.addEventListener('load', function () {
+          if (this.readyState === 4) {
+            let response = this.responseText;
 
-function goToBottom() {
-	const scrollingElement = (document.scrollingElement || document.body);
-	scrollingElement.scrollTop = scrollingElement.scrollHeight;
-}
+            if (response) {
+              response = JSON.parse(response);
 
-function getGraphql() {
-	return _sharedData.entry_data.ProfilePage[0].graphql;
-}
+              if (response.data) {
+                let images = [];
 
-function getCount() {
-	const graphql = getGraphql();
-	return graphql.user.edge_owner_to_timeline_media.count;
-}
+                if (response.data.shortcode_media) {
+                  images = getImagesFromShortCodeMedia(response.data.shortcode_media);
+                } else {
+                  const edges = getEdgesFromGraphql(response.data);
+                  images = getImagesFromEdges(edges);
+                }
 
-function getEdgesFromGraphql(graphql) {
-	return graphql.user.edge_owner_to_timeline_media.edges;
-}
+                allImages.push(...images);
+              }
+            }
+          }
+        });
 
-function getImagesFromSidecar(edges) {
-	let images = [];
-	
-	for (const edge of edges) {
-		images.push(edge.node.display_url);
-	}
-	
-	return images;
-}
+        origOpen.apply(this, arguments);
+      };
+    })();
 
-function getImagesFromShortCodeMedia(shortCodeMedia) {
-	let images = [];
-	
-	if (shortCodeMedia.edge_sidecar_to_children && shortCodeMedia.edge_sidecar_to_children.edges) {
-		const sidecarImages = getImagesFromSidecar(shortCodeMedia.edge_sidecar_to_children.edges);
-		images.push(...sidecarImages);
-	} else {
-		images.push(shortCodeMedia.display_url);
-	}
-	
-	return images;
-}
+    (async () => {
+      await getAllFirstImages();
 
-function getImagesFromEdges(edges) {
-	let images = [];
-	
-	for (const edge of edges) {
-		const node = edge.node;
-		
-		if (node.edge_sidecar_to_children && node.edge_sidecar_to_children.edges) {
-			const sidecarImages = getImagesFromSidecar(node.edge_sidecar_to_children.edges);
-			images.push(...sidecarImages);
-		} else {
-			images.push(node.display_url);
-		}
-	}
-	
-	return images;
-}
+      scrollingInterval = setInterval(function () {
+        if (counter === userPostsCount) {
+          clearInterval(scrollingInterval);
+          resolve(allImages);
+        } else {
+          goToBottom();
+        }
+      }, 1000);
+    })();
 
-function downloadImage(link, name) {
-	const a = document.createElement('a');
-	a.href = link;
-	a.download = name;
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-}
+    async function getAllFirstImages() {
+      counter += firstImageElements.length;
 
-function downloadAllImages() {
-	allImages = allImages.reverse();
-	
-	for (const [i, allImage] of allImages.entries()) {
-		downloadImage(allImage, i + 1);
-	}
+      for (let firstImagesElement of firstImageElements) {
+        await openImageAndClose(firstImagesElement);
+      }
+    }
+
+    async function openImageAndClose(element) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          element.click();
+          document.querySelector('div[role=\'dialog\']').click();
+          resolve();
+        }, 3000);
+      });
+    }
+
+    function goToBottom() {
+      const scrollingElement = (document.scrollingElement || document.body);
+
+      scrollingElement.scrollTop = scrollingElement.scrollHeight;
+    }
+
+    function getImagesFromSidecar(edges) {
+      let images = [];
+
+      for (let edge of edges) {
+        images.push(edge.node.display_url);
+      }
+
+      return images;
+    }
+
+    function getImagesFromShortCodeMedia(shortCodeMedia) {
+      let images = [];
+
+      if (shortCodeMedia.edge_sidecar_to_children && shortCodeMedia.edge_sidecar_to_children.edges) {
+        const sidecarImages = getImagesFromSidecar(shortCodeMedia.edge_sidecar_to_children.edges);
+
+        images.push(...sidecarImages);
+      } else {
+        images.push(shortCodeMedia.display_url);
+      }
+
+      counter += 1;
+
+      return images;
+    }
+
+    function getImagesFromEdges(edges) {
+      let images = [];
+
+      for (let edge of edges) {
+        const node = edge.node;
+
+        if (node.edge_sidecar_to_children && node.edge_sidecar_to_children.edges) {
+          const sidecarImages = getImagesFromSidecar(node.edge_sidecar_to_children.edges);
+
+          images.push(...sidecarImages);
+        } else {
+          images.push(node.display_url);
+        }
+
+        counter += 1;
+      }
+
+      return images;
+    }
+
+    function getGraphql() {
+      return _sharedData.entry_data.ProfilePage[0].graphql;
+    }
+
+    function getUserPostsCount() {
+      const graphql = getGraphql();
+
+      return graphql.user.edge_owner_to_timeline_media.count;
+    }
+
+    function getEdgesFromGraphql(graphql) {
+      return graphql.user.edge_owner_to_timeline_media.edges;
+    }
+  });
 }
