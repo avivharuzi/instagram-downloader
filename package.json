@@ -1,7 +1,7 @@
 {
   "name": "instagram-downloader",
   "version": "1.0.0",
-  "description": "download images from instagram using node.js with phantomjs",
+  "description": "Download images and videos from Instagram using Node.js with Puppeteer",
   "main": "index.js",
   "dependencies": {
     "fs-extra": "^7.0.1",

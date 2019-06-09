@@ -26,45 +26,51 @@ function download(url, path) {
 	return imageDownloader.image(options);
 }
 
-async function saveImages(urls, username) {
-	const basicFolder = `${BASE_PUBLIC_FOLDER}${username}/`;
-	const isBasicFolderExist = await fse.exists(basicFolder);
-
+async function saveMedia(urls, username, subpath) {
 	try {
-		if (!isBasicFolderExist) {
-			await fse.mkdir(basicFolder);
+    const basicFolder = `${BASE_PUBLIC_FOLDER}${username}/`;
+    const basicFolderWithSubpath = `${basicFolder}${subpath}/`;
+    const totalLength = urls.length.toString().length;
+
+		if (!await fse.exists(basicFolder)) {
+      await fse.mkdir(basicFolder);
+    }
+
+    if (!await fse.exists(basicFolderWithSubpath)) {
+      await fse.mkdir(basicFolderWithSubpath);
     }
 
     urls = urls.reverse();
 
-    console.log(`Starting downloading images into folder: ${basicFolder}`);
+    console.log(`Starting downloading ${subpath} into folder: ${basicFolderWithSubpath}`);
 
     for (let [i, url] of urls.entries()) {
       const filename = getFilenameFromUrl(url);
       const fileExtension = filename.substr(filename.lastIndexOf('.'));
       const counter = i + 1;
+      const filenameLength = i.toString().length;
 
       let finaleFilename = '';
 
-      if (counter < 10) {
-        finaleFilename = `0${counter}${fileExtension}`;
-      } else {
+      if (totalLength === filenameLength) {
         finaleFilename = `${counter}${fileExtension}`;
+      } else {
+        finaleFilename = `${'0'.repeat(totalLength - filenameLength)}${counter}${fileExtension}`;
       }
 
-      const path = `${basicFolder}${finaleFilename}`;
+      const path = `${basicFolderWithSubpath}${finaleFilename}`;
 
       await download(url, path);
 
       if (((counter % (Math.floor(urls.length * 0.1))) === 0) || counter === urls.length) {
-        console.log(`Downloaded ${counter} images...`);
+        console.log(`Downloaded ${counter} ${subpath}...`);
       }
     }
+
+    console.log(`Finished download ${subpath}`);
 	} catch (error) {
 		console.log(`There was a problem while downloading the file: ${error}`);
   }
-
-  console.log('Finished download images');
 }
 
 (async () => {
@@ -85,7 +91,7 @@ async function saveImages(urls, username) {
   });
 
   await page.addScriptTag({
-    path: path.join(__dirname, 'scripts/all-images.js')
+    path: path.join(__dirname, 'scripts/all-media.js')
   });
 
   page.on('console', msg => {
@@ -96,11 +102,12 @@ async function saveImages(urls, username) {
     console.log('Error:', error);
   });
 
-  const images = await page.evaluate(() => allImages());
+  const { allImages, allVideos } = await page.evaluate(() => allMedia());
 
-  console.log(`Found ${images.length} images`);
+  console.log(`Found ${allImages.length} images and ${allVideos.length} videos`);
 
   await browser.close();
 
-  await saveImages(images, username);
+  await saveMedia(allImages, username, 'images');
+  await saveMedia(allVideos, username, 'videos');
 })();
