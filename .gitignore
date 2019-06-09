@@ -59,3 +59,9 @@ typings/
 
 # next.js build output
 .next
+
+# DS store
+.DS_Store
+
+# Public folder
+public/
