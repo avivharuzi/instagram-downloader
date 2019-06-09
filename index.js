@@ -88,6 +88,14 @@ async function saveImages(urls, username) {
     path: path.join(__dirname, 'scripts/all-images.js')
   });
 
+  page.on('console', msg => {
+    console.log(msg.args().join(' '));
+  });
+
+  page.on('error', error => {
+    console.log('Error:', error);
+  });
+
   const images = await page.evaluate(() => allImages());
 
   console.log(`Found ${images.length} images`);
