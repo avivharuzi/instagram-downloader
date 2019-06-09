@@ -1,3 +1,3 @@
 # Instagram Downloader
 
-Download images from Instagram using Node.js with Phantomjs.
+Download images and videos from Instagram using Node.js with Puppeteer.
