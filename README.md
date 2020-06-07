@@ -10,7 +10,7 @@ npm start
 
 ## What It's Doing?
 
-* Will ask for instagram username (only **public** users are supported)
+* Will ask for instagram username (only **public** users supported)
 * Will try to collect all images and videos from instagram website
 * Will try download images and videos into public folder
 
