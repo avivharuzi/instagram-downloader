@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const fse = require('fs-extra');
 const imageDownloader = require('image-downloader');
 const path = require('path');
@@ -26,62 +27,51 @@ function download(url, path) {
 	return imageDownloader.image(options);
 }
 
-async function saveMedia(urls, username, subpath) {
+async function saveMedia(urls, username, subPath) {
 	try {
     const basicFolder = `${BASE_PUBLIC_FOLDER}${username}/`;
-    const basicFolderWithSubpath = `${basicFolder}${subpath}/`;
-    const totalLength = urls.length.toString().length;
+    const basicFolderWithSubPath = `${basicFolder}${subPath}/`;
 
 		if (!await fse.exists(basicFolder)) {
       await fse.mkdir(basicFolder);
     }
 
-    if (!await fse.exists(basicFolderWithSubpath)) {
-      await fse.mkdir(basicFolderWithSubpath);
+    if (!await fse.exists(basicFolderWithSubPath)) {
+      await fse.mkdir(basicFolderWithSubPath);
     }
 
-    urls = urls.reverse();
-
-    console.log(`Starting downloading ${subpath} into folder: ${basicFolderWithSubpath}`);
-
-    for (let [i, url] of urls.entries()) {
+    const downloadPromises = urls.reverse().map((url, i) => {
       const filename = getFilenameFromUrl(url);
       const fileExtension = filename.substr(filename.lastIndexOf('.'));
-      const counter = i + 1;
-      const filenameLength = i.toString().length;
 
-      let finaleFilename = '';
+      const finaleFilename = `${i + 1}`.padStart(4, '0') + `${fileExtension}`;
 
-      if (totalLength === filenameLength) {
-        finaleFilename = `${counter}${fileExtension}`;
-      } else {
-        finaleFilename = `${'0'.repeat(totalLength - filenameLength)}${counter}${fileExtension}`;
-      }
+      const path = `${basicFolderWithSubPath}${finaleFilename}`;
 
-      const path = `${basicFolderWithSubpath}${finaleFilename}`;
+      return download(url, path);
+    });
 
-      await download(url, path);
+    console.log(chalk.yellow(`Starting downloading ${subPath} into folder: ${basicFolderWithSubPath}`));
 
-      if (((counter % (Math.floor(urls.length * 0.1))) === 0) || counter === urls.length) {
-        console.log(`Downloaded ${counter} ${subpath}...`);
-      }
-    }
+    await Promise.all(downloadPromises);
 
-    console.log(`Finished download ${subpath}`);
+    console.log(chalk.green(`Finished download ${subPath}`));
 	} catch (error) {
-		console.log(`There was a problem while downloading the file: ${error}`);
+		console.log(chalk.red(`There was a problem while downloading into public folder, error: ${error}`));
   }
 }
 
 (async () => {
-	const question = await prompts({
+	// noinspection JSUnusedGlobalSymbols
+  const question = await prompts({
 		type: 'text',
 		name: 'username',
 		message: 'Please insert instagram username',
 		validate: value => !value ? `Instagram username is required` : true
 	});
 
-	const username = question.username;
+	// noinspection JSUnresolvedVariable
+  const username = question.username;
 
 	const browser = await puppeteer.launch();
 	const page = await browser.newPage();
@@ -95,19 +85,30 @@ async function saveMedia(urls, username, subpath) {
   });
 
   page.on('console', msg => {
-    console.log(msg.args().join(' '));
+    console.log(chalk.yellow(msg.args().join(' ')));
   });
 
   page.on('error', error => {
-    console.log('Error:', error);
+    console.log(chalk.red(`Page error: ${error}`));
   });
 
-  const { allImages, allVideos } = await page.evaluate(() => allMedia());
+  try {
+    const { allImages, allVideos } = await page.evaluate(() => allMedia());
 
-  console.log(`Found ${allImages.length} images and ${allVideos.length} videos`);
+    console.log(chalk.blue(`Found ${allImages.length} images and ${allVideos.length} videos`));
 
-  await browser.close();
+    await browser.close();
 
-  await saveMedia(allImages, username, 'images');
-  await saveMedia(allVideos, username, 'videos');
+    if (allImages && allImages.length > 0) {
+      await saveMedia(allImages, username, 'images');
+    }
+
+    if (allVideos && allVideos.length > 0) {
+      await saveMedia(allVideos, username, 'videos');
+    }
+  } catch (error) {
+    console.log(chalk.red(`There was a problem while trying to download instagram images and videos, error: ${error}`));
+
+    process.exit();
+  }
 })();

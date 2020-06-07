@@ -4,6 +4,7 @@
   "description": "Download images and videos from Instagram using Node.js with Puppeteer",
   "main": "index.js",
   "dependencies": {
+    "chalk": "^4.0.0",
     "fs-extra": "^7.0.1",
     "image-downloader": "^3.4.1",
     "prompts": "^1.2.1",
@@ -12,6 +13,7 @@
   },
   "devDependencies": {},
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
