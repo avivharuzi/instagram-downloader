@@ -1,12 +1,16 @@
 function allMedia() {
-  return new Promise(async (resolve) => {
-    const firstImageVideoElements = document.querySelectorAll('img[decoding=\'auto\']');
+  return new Promise(async (resolve, reject) => {
+    if (isUserPrivate()) {
+      return reject('User is private!');
+    }
 
-    let allImages = [];
-    let allVideos = [];
+    const allImages = [];
+    const allVideos = [];
+
     let counter = 0;
     let scrollingInterval = null;
 
+    const firstImageVideoElements = document.querySelectorAll('img[decoding=\'auto\']');
     const userMediaCount = getUserMediaCount();
 
     console.log(`There is ${userMediaCount} media to be downloaded...`);
@@ -14,6 +18,7 @@ function allMedia() {
     console.log(`All images length: ${allImages.length}`);
     console.log(`All videos length: ${allVideos.length}`);
 
+    // Start listen to XHR events...
     (() => {
       const origOpen = XMLHttpRequest.prototype.open;
 
@@ -26,12 +31,14 @@ function allMedia() {
               response = JSON.parse(response);
 
               if (response.data) {
-                let images = [];
-                let videos = [];
+                let images;
+                let videos;
 
+                // noinspection JSUnresolvedVariable
                 if (response.data.shortcode_media) {
                   console.log('Got response with data, type: shortcode_media');
 
+                  // noinspection JSUnresolvedVariable
                   const imagesAndVideosFromShortCodeMedia = getImagesAndVideosFromShortCodeMedia(response.data.shortcode_media);
                   images = imagesAndVideosFromShortCodeMedia.images;
                   videos = imagesAndVideosFromShortCodeMedia.videos;
@@ -61,12 +68,12 @@ function allMedia() {
       };
     })();
 
-    (async () => {
+    await (async () => {
       await getAllFirstImagesAndVideos();
 
       console.log(`After getting first images and videos, counter: ${counter}, start getting the other...`);
 
-      scrollingInterval = setInterval(function () {
+      scrollingInterval = setInterval(() => {
         if (counter === userMediaCount) {
           finish();
         } else {
@@ -117,11 +124,15 @@ function allMedia() {
       let videos = [];
 
       for (let edge of edges) {
+        // noinspection JSUnresolvedVariable
         if (edge.node.display_url) {
+          // noinspection JSUnresolvedVariable
           images.push(edge.node.display_url);
         }
 
+        // noinspection JSUnresolvedVariable
         if (edge.node.video_url) {
+          // noinspection JSUnresolvedVariable
           videos.push(edge.node.video_url);
         }
       }
@@ -133,16 +144,19 @@ function allMedia() {
       let images = [];
       let videos = [];
 
+      // noinspection JSUnresolvedVariable,DuplicatedCode
       if (shortCodeMedia.edge_sidecar_to_children && shortCodeMedia.edge_sidecar_to_children.edges) {
         const imagesAndVideosFromSidecar = getImagesAndVideosFromSidecar(shortCodeMedia.edge_sidecar_to_children.edges);
 
         images.push(...imagesAndVideosFromSidecar.images);
-        videos.push(...imagesAndVideosFromSidecar.videos)
+        videos.push(...imagesAndVideosFromSidecar.videos);
       } else {
+        // noinspection JSUnresolvedVariable
         if (shortCodeMedia.display_url) {
           images.push(shortCodeMedia.display_url);
         }
 
+        // noinspection JSUnresolvedVariable
         if (shortCodeMedia.video_url) {
           videos.push(shortCodeMedia.video_url);
         }
@@ -156,18 +170,22 @@ function allMedia() {
       let videos = [];
 
       for (let edge of edges) {
+        // noinspection JSUnresolvedVariable
         const node = edge.node;
 
+        // noinspection JSUnresolvedVariable,DuplicatedCode
         if (node.edge_sidecar_to_children && node.edge_sidecar_to_children.edges) {
           const imagesAndVideosFromSidecar = getImagesAndVideosFromSidecar(node.edge_sidecar_to_children.edges);
 
           images.push(...imagesAndVideosFromSidecar.images);
-          videos.push(...imagesAndVideosFromSidecar.videos)
+          videos.push(...imagesAndVideosFromSidecar.videos);
         } else {
+          // noinspection JSUnresolvedVariable
           if (node.display_url) {
             images.push(node.display_url);
           }
 
+          // noinspection JSUnresolvedVariable
           if (node.video_url) {
             videos.push(node.video_url);
           }
@@ -178,21 +196,32 @@ function allMedia() {
     }
 
     function getGraphql() {
+      // noinspection JSUnresolvedVariable
       return _sharedData.entry_data.ProfilePage[0].graphql;
     }
 
     function getUserMediaCount() {
       const graphql = getGraphql();
 
+      // noinspection JSUnresolvedVariable
       return graphql.user.edge_owner_to_timeline_media.count;
     }
 
     function getEdgesFromGraphql(graphql) {
+      // noinspection JSUnresolvedVariable
       return graphql.user.edge_owner_to_timeline_media.edges;
     }
 
     function hasNextPageFromGraphql(graphql) {
+      // noinspection JSUnresolvedVariable
       return graphql.user.edge_owner_to_timeline_media.page_info.has_next_page;
+    }
+
+    function isUserPrivate() {
+      const graphql = getGraphql();
+
+      // noinspection JSUnresolvedVariable
+      return graphql.user.is_private;
     }
   });
 }
