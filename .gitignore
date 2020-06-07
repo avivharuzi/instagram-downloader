@@ -63,5 +63,8 @@ typings/
 # DS store
 .DS_Store
 
+# IDEs and editors
+.idea/
+
 # Public folder
 public/
